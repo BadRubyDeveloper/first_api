@@ -1,4 +1,6 @@
 class UsersController < ApplicationController
+  before_action :set_user, only: [:show, :update, :destroy]
+
   def index
   	users = User.all
 
@@ -6,40 +8,44 @@ class UsersController < ApplicationController
   end
 
   def create
-  	user = User.create(name: params[:name], email: params[:email], password: params[:password])
+  	user = User.create(user_params)
 
   	if user.persisted?
   	  render json: user, status: 201
   	else
-  	  render json: { errors: user.errors.full_messages }, status: 400
+  	  render json: { message: "User not created!", errors: user.errors.full_messages }, status: 400
   	end
   end
 
   def show
-  	user = User.find_by(id: params[:id])
-
-  	unless user.nil?
-  	  render json: user, status: 200
+  	if @user
+  	  render json: @user, status: 200
   	else
   	  render json: { message: "User is not exist" }, status: 404
   	end
   end
 
   def update
-  	user = User.find_by(id: params[:id])
-
-  	if user.update(email: params[:email], password: params[:password], name: params[:name])
-  	  render json: user, status: 200
+  	if @user.update(user_params)
+  	  render json: @user, status: 200
   	else
-  	  render json: { errors: user.errors.full_messages }, status: 400
+  	  render json: { message: "User is not updated!", errors: @user.errors.full_messages }, status: 400
   	end
   end
 
   def destroy
-  	user = User.find_by(id: params[:id])
-
-  	if user.destroy
+  	if @user.destroy
   	  render json: "User was deleted", status: 204
   	end
+  end
+
+  private
+
+  def user_params
+    params.require(:user).permit(:name, :email, :password)
+  end
+
+  def set_user
+    @user = User.find_by(id: params[:id])
   end
 end
