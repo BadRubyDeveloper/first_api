@@ -95,6 +95,18 @@ RSpec.describe UsersController, type: :request do
 				expect(response_json['name']).to eq "John Smith"
 			end
 		end
+
+		context "when user not updated" do
+			let(:user_params) { { email: "john_smith"} }
+
+			it "return status bad request" do
+				expect(last_response.status).to eq 400
+			end
+
+			it "return correct data" do
+				expect(response_json['message']).to eq "User is not updated!"
+			end
+		end
 	end
 
 	describe "DELETE /users/:id" do
