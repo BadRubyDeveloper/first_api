@@ -21,7 +21,7 @@ RSpec.describe UsersController, type: :request do
 		end
 
 		context "when user is created" do
-			let(:user_params) { { name: "John Smith", email: "john_smith@test.com", password: "1234" } }
+			let!(:user_params) { { name: "John Smith", email: "john_smith@test.com", password: "1234" } }
 
 			it "return status created" do
 				expect(last_response.status).to eq 201
@@ -33,7 +33,7 @@ RSpec.describe UsersController, type: :request do
 		end
 
 		context "when user is not created" do
-			let(:user_params) { { name: "John Smith" } }
+			let(:user_params) { { name: "John Smith", password: "1234" } }
 
 			it "return status bad request" do
 				expect(last_response.status).to eq 400

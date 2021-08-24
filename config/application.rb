@@ -12,6 +12,8 @@ module FirstApi
     config.load_defaults 6.1
 
     config.factory_bot.definition_file_paths = ["custom/factories"]
+
+    Dir[Rails.root.join('app', 'interactors', '**', '*.rb')].sort.each { |f| require f }
     # Configuration for the application, engines, and railties goes here.
     #
     # These settings can be overridden in specific environments using the files
