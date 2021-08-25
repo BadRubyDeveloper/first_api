@@ -2,6 +2,7 @@ require 'rails_helper'
 
 RSpec.describe ItemsController, type: :request do
   let!(:user) { create :user }
+  let!(:wrong_user) { create :user }
 
   describe "GET /index" do
     let!(:items) { create_list :item, 3, user: user }
@@ -47,17 +48,34 @@ RSpec.describe ItemsController, type: :request do
 
   describe "POST /create" do
     let!(:item_params) { { name: "New Item" } }
+    let!(:token) { TokensCreator.new(user).call }
 
-    before do
-      post "/users/#{user.id}/items", item: item_params
+    context "when user authenticated" do
+      before do
+        post "/users/#{user.id}/items", { item: item_params }, { "HTTP_AUTHORIZATION" => "Bearer #{token}" }
+      end
+
+      it "return status CREATED" do
+        expect(last_response.status).to eq 201
+      end
+
+      it "return created record" do
+        expect(response_json['name']).to eq "New Item"
+      end
     end
 
-    it "return status CREATED" do
-      expect(last_response.status).to eq 201
-    end
+    context "when user not authenticated" do
+      before do
+        post "/users/#{user.id}/items", { item: item_params }
+      end
 
-    it "return created record" do
-      expect(response_json['name']).to eq "New Item"
+      it "return status CREATED" do
+        expect(last_response.status).to eq 403
+      end
+
+      it "return created record" do
+        expect(response_json['message']).to eq "Access denied"
+      end
     end
   end
 
@@ -66,25 +84,59 @@ RSpec.describe ItemsController, type: :request do
     let!(:item_params) { { name: "Updated item" } }
 
     before do
-      patch "/users/#{user.id}/items/#{item.id}", item: item_params
+      patch "/users/#{user.id}/items/#{item.id}", { item: item_params }, { "HTTP_AUTHORIZATION" => "Bearer #{token}" }
     end
 
-    it "return status OK" do
-      expect(last_response.status).to eq 200
+    context "when user is creator of item" do
+      let!(:token) { TokensCreator.new(user).call }
+
+      it "return status OK" do
+        expect(last_response.status).to eq 200
+      end
+
+      it "return updated record" do
+        expect(response_json['name']).to eq "Updated item"
+      end
     end
 
-    it "return updated record" do
-      expect(response_json['name']).to eq "Updated item"
+    context "when user is not creator of item" do
+      let!(:token) { TokensCreator.new(wrong_user).call }
+
+      it "return status OK" do
+        expect(last_response.status).to eq 403
+      end
+
+      it "return updated record" do
+        expect(response_json['message']).to eq "Access denied"
+      end
     end
   end
 
   describe "DELETE /destroy" do
     let!(:item) { create :item, user: user }
 
-    it "return status NO CONTENT" do
-      delete "/users/#{user.id}/items/#{item.id}"
+    before do
+      delete "/users/#{user.id}/items/#{item.id}", {}, { "HTTP_AUTHORIZATION" => "Bearer #{token}" }
+    end
 
-      expect(last_response.status).to eq 204
+    context "when user is creator of item" do
+      let!(:token) { TokensCreator.new(user).call }
+
+      it "return status NO CONTENT" do
+        expect(last_response.status).to eq 204
+      end
+    end
+    
+    context "when user is not creator of item" do
+      let!(:token) { TokensCreator.new(wrong_user).call }
+
+      it "return status OK" do
+        expect(last_response.status).to eq 403
+      end
+
+      it "return updated record" do
+        expect(response_json['message']).to eq "Access denied"
+      end
     end
   end
 end

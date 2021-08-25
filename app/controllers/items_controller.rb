@@ -1,11 +1,17 @@
 class ItemsController < ApplicationController
+	include ItemsPolicy
+
+	before_action :authenticate!, only: [:create, :update, :destroy]
+
 	def index
+		# Can read all
 		@items = User.find(params[:user_id]).items
 
 		render json: @items, status: 200
 	end
 
 	def show
+		# Can read all
 		@item = User.find(params[:user_id]).items.find_by(id: params[:id])
 
 		render json: @item, status: :ok
@@ -23,6 +29,7 @@ class ItemsController < ApplicationController
 
 	def update
 		@item = User.find(params[:user_id]).items.find_by(id: params[:id])
+		return render_unauthorize unless can_write?(@item, @current_user)
 
 		if @item.update(item_params)
 			render json: @item, status: :ok
@@ -32,7 +39,10 @@ class ItemsController < ApplicationController
 	end
 
 	def destroy
+		# Can update only creator or admin
 		@item = User.find(params[:user_id]).items.find_by(id: params[:id])
+		return render_unauthorize unless can_write?(@item, @current_user)
+		
 		@item.destroy
 
 		render json: { message: "Record deleted!" }, status: :no_content
