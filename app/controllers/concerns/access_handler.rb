@@ -16,6 +16,8 @@ module AccessHandler
 
 	def unpack_token
 		token = request.env["HTTP_AUTHORIZATION"].split(' ').last
+		return render_unauthorize unless token_valid?(token)
+
 		decoded_token = JWT.decode token, nil, false
 
 		verify_information(decoded_token.first)
@@ -29,5 +31,12 @@ module AccessHandler
 		else
 			render_unauthorize
 		end
+	end
+
+	def token_valid?(token)
+		token = Token.find_by(token: token)
+		return true if token && !token.expired
+
+		false if token.nil?
 	end
 end

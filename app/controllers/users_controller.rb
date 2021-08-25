@@ -31,7 +31,10 @@ class UsersController < ApplicationController
 
   def update
     # Can write only self or admin
+
   	if @user.update(user_params)
+      @user.update(password: Base64.encode64(user_params[:password])) if user_params[:password]
+
   	  render json: @user, status: 200
   	else
   	  render json: { message: "User is not updated!", errors: @user.errors.full_messages }, status: 400

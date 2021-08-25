@@ -6,6 +6,7 @@ class User < ApplicationRecord
   validates_format_of :email, with: EMAIL_REGEX
 
   has_many :items, dependent: :destroy
+  has_many :tokens, dependent: :destroy
 
   def password_right?(password)
     Base64.decode64(self.password) == password
