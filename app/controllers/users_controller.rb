@@ -1,15 +1,17 @@
 class UsersController < ApplicationController
+  include UsersPolicy
+  before_action :authenticate!, only: [:index, :update, :show, :destroy]
   before_action :set_user, only: [:show, :update, :destroy]
 
   def index
-    # Can read only admin
+    return render_unauthorize unless can_read?(@current_user)
+    
   	users = User.all
 
   	render json: users, status: 200
   end
 
   def create
-    # Can create all
   	user = User.new(user_params)
     user.password = Base64.encode64(user_params[:password])
 
@@ -21,7 +23,8 @@ class UsersController < ApplicationController
   end
 
   def show
-    # Can read only self, or admin
+    return render_unauthorize unless can_update?(@user, @current_user)
+
   	if @user
   	  render json: @user, status: 200
   	else
@@ -30,7 +33,7 @@ class UsersController < ApplicationController
   end
 
   def update
-    # Can write only self or admin
+    return render_unauthorize unless can_update?(@user, @current_user)
 
   	if @user.update(user_params)
       @user.update(password: Base64.encode64(user_params[:password])) if user_params[:password]
@@ -42,7 +45,8 @@ class UsersController < ApplicationController
   end
 
   def destroy
-    # Can write only admin
+    return render_unauthorize unless can_delete?(@current_user)
+
   	if @user.destroy
   	  render json: "User was deleted", status: 204
   	end
@@ -55,6 +59,6 @@ class UsersController < ApplicationController
   end
 
   def set_user
-    @user = User.find_by(id: params[:id])
+    @user = User.find_by!(id: params[:id])
   end
 end
