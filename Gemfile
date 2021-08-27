@@ -37,6 +37,7 @@ group :development, :test do
   gem 'pry-rails'
   gem 'database_cleaner'
   gem 'ffaker', '~> 2.2'
+  gem 'simplecov', require: false
 end
 
 group :development do

@@ -30,6 +30,10 @@ RSpec.describe UsersController, type: :request do
 			it "return correct user data" do
 				expect(response_json).to match parse_json(User.last)
 			end
+
+			it 'return encrtypted password' do
+				expect(response_json['password']).to eq Base64.encode64("1234")
+			end
 		end
 
 		context "when user is not created" do
@@ -93,6 +97,10 @@ RSpec.describe UsersController, type: :request do
 
 			it "return correct data" do
 				expect(response_json['name']).to eq "John Smith"
+			end
+
+			it 'return encrtypted password' do
+				expect(response_json['password']).to eq Base64.encode64("1234")
 			end
 		end
 

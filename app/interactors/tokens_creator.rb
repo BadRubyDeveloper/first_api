@@ -4,12 +4,20 @@ class TokensCreator
 			user_id: user.id,
 			email: user.email,
 			username: user.name,
-			salt: generate_salt
+			salt: generate_salt,
+			expired_in: Time.current + 30.minutes
 		}
 	end
 
 	def call
-		JWT.encode @payload, nil, "HS256"
+		encoded_token = JWT.encode @payload, nil, "HS256"
+		token = Token.create(
+			user_id: @payload[:user_id],
+			token: encoded_token,
+			expired_in: @payload[:expired_in]
+		)
+		
+		return token.token
 	end
 
 	private
